@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "extend": {
+      "type": "http",
+      "url": "https://mcp.extend.ai/mcp"
+    }
+  }
+}
