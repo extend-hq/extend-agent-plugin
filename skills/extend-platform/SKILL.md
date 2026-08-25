@@ -16,7 +16,9 @@ Surfaces, in preference order for an agent session:
 - **MCP server** (`https://mcp.extend.ai/mcp`): the primary surface
   this skill targets. Tools mirror the public API.
 - **API / SDKs** (`api.extend.ai`; TypeScript, Python, Java, Go): for
-  code the user will keep. Docs: https://docs.extend.ai
+  code the user will keep. Building an integration in code? Fetch
+  https://docs.extend.ai/agents.md — endpoints, SDK snippets, and
+  config dialects live there; do not restate them from this skill.
 - **`extend` CLI**: for shell-driven jobs — covered by the separate
   `extend-cli` skill; prefer it when the user works in a terminal
   against local files.
