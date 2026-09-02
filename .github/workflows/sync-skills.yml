@@ -7,12 +7,9 @@ name: Sync skills from their source repos
 # drifted (the org forbids Actions-created PRs, and the snapshots have no
 # human review step anyway). Source repos push to us: the documentation repo
 # dispatches after Fern publishes and extend-cli dispatches after a release,
-# so drift lands within minutes. The weekly cron is a backstop in case a
-# dispatch is missed.
+# so drift lands within minutes.
 
 on:
-  schedule:
-    - cron: "0 14 * * 1" # Mondays 14:00 UTC backstop
   workflow_dispatch: {}
   repository_dispatch:
     types: [sync-skills]
