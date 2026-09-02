@@ -3,14 +3,17 @@ name: Sync skills from their source repos
 # The bundled skills are derived artifacts: extend-api comes from the served
 # docs (agents.md) and extend-cli from the CLI binary's own `extend skill`
 # output. This workflow refreshes both, normalizes the text (marketplace
-# listing copy bans em dashes), and opens a PR when anything drifted.
-# A PR (not a direct push) because every push to main triggers marketplace
-# re-review; batching stays a human decision.
+# listing copy bans em dashes), and auto-merges a PR when anything drifted.
+# Source repos push to us: the documentation repo dispatches after Fern
+# publishes and extend-cli dispatches after a release, so drift lands within
+# minutes. The weekly cron is a backstop in case a dispatch is missed.
 
 on:
   schedule:
-    - cron: "0 14 * * 1" # Mondays 14:00 UTC
+    - cron: "0 14 * * 1" # Mondays 14:00 UTC backstop
   workflow_dispatch: {}
+  repository_dispatch:
+    types: [sync-skills]
 
 permissions:
   contents: write
@@ -49,6 +52,7 @@ jobs:
           EOF
 
       - name: Open a PR if the skills drifted
+        id: pr
         uses: peter-evans/create-pull-request@v7
         with:
           branch: sync/skills
@@ -63,3 +67,11 @@ jobs:
             Em dashes normalized per repo policy. Merging this will trigger
             marketplace re-review on platforms that watch the repo.
           delete-branch: true
+
+      # Skills are generated snapshots, so there is nothing for a human to
+      # review; the PR exists only as an audit record of each sync.
+      - name: Merge the sync PR
+        if: steps.pr.outputs.pull-request-number
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh pr merge --squash --delete-branch "${{ steps.pr.outputs.pull-request-number }}"
