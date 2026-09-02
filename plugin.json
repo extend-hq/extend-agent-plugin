@@ -1,7 +1,7 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "extend",
-  "description": "Document processing for agents: parse, extract, classify, split, and fill PDFs and images with Extend. Bundles the hosted Extend MCP server and the extend-cli skill.",
+  "description": "Document processing for agents: parse, extract, classify, split, and fill PDFs and images with Extend. Bundles the hosted Extend MCP server plus the extend-api and extend-cli skills.",
   "version": "1.0.0",
   "author": {
     "name": "Extend",

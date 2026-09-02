@@ -2,7 +2,7 @@
   "name": "extend",
   "displayName": "Extend",
   "version": "1.0.0",
-  "description": "Document processing for agents: parse, extract, classify, split, and fill PDFs and images with Extend. Bundles the hosted Extend MCP server and the extend-cli skill.",
+  "description": "Document processing for agents: parse, extract, classify, split, and fill PDFs and images with Extend. Bundles the hosted Extend MCP server plus the extend-api and extend-cli skills.",
   "author": {
     "name": "Extend",
     "url": "https://extend.ai"

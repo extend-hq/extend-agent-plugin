@@ -14,9 +14,29 @@ This plugin bundles:
   connection may use. The server teaches its own cross-tool usage patterns
   through MCP server instructions and per-response guidance, so no companion
   skill is needed for it.
+- **`extend-api` skill** — a compact brief for agents writing integration
+  code against the [Extend API and SDKs](https://docs.extend.ai): endpoints,
+  schema rules, sync-vs-async patterns, webhooks, and error handling.
 - **`extend-cli` skill** — how to drive the [`extend` CLI](https://docs.extend.ai/cli)
-  for shell, script, and CI work against local files. Generated from the CLI
-  itself (`extend skill`); regenerate after CLI releases.
+  for shell, script, and CI work against local files.
+
+The skills also install standalone, without the plugin:
+
+```bash
+npx skills add extend-hq/extend-agent-plugin
+```
+
+## Regenerating the skills
+
+Both skills are generated snapshots; do not edit them by hand.
+
+```bash
+# extend-api: frontmatter + the served agents.md (refresh on docs changes)
+{ sed -n '1,4p' skills/extend-api/SKILL.md; curl -fsSL https://docs.extend.ai/agents.md; } > /tmp/extend-api.md && mv /tmp/extend-api.md skills/extend-api/SKILL.md
+
+# extend-cli: emitted by the CLI itself (refresh on CLI releases)
+extend skill > skills/extend-cli/SKILL.md
+```
 
 ## Install
 
