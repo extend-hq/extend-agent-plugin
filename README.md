@@ -28,7 +28,10 @@ npx skills add extend-hq/extend-agent-plugin
 
 ## Regenerating the skills
 
-Both skills are generated snapshots; do not edit them by hand.
+Both skills are generated snapshots; do not edit them by hand. A scheduled
+workflow (`.github/workflows/sync-skills.yml`) refreshes them weekly from
+their sources (the served docs `agents.md` and the latest CLI release) and
+opens a PR when they drift. To refresh manually:
 
 ```bash
 # extend-api: frontmatter + the served agents.md (refresh on docs changes)
