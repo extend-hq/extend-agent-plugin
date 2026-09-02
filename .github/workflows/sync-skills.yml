@@ -3,10 +3,12 @@ name: Sync skills from their source repos
 # The bundled skills are derived artifacts: extend-api comes from the served
 # docs (agents.md) and extend-cli from the CLI binary's own `extend skill`
 # output. This workflow refreshes both, normalizes the text (marketplace
-# listing copy bans em dashes), and auto-merges a PR when anything drifted.
-# Source repos push to us: the documentation repo dispatches after Fern
-# publishes and extend-cli dispatches after a release, so drift lands within
-# minutes. The weekly cron is a backstop in case a dispatch is missed.
+# listing copy bans em dashes), and pushes directly to main when anything
+# drifted (the org forbids Actions-created PRs, and the snapshots have no
+# human review step anyway). Source repos push to us: the documentation repo
+# dispatches after Fern publishes and extend-cli dispatches after a release,
+# so drift lands within minutes. The weekly cron is a backstop in case a
+# dispatch is missed.
 
 on:
   schedule:
@@ -17,7 +19,6 @@ on:
 
 permissions:
   contents: write
-  pull-requests: write
 
 jobs:
   sync:
@@ -51,27 +52,15 @@ jobs:
               p.write_text(text)
           EOF
 
-      - name: Open a PR if the skills drifted
-        id: pr
-        uses: peter-evans/create-pull-request@v7
-        with:
-          branch: sync/skills
-          title: "Sync skills from their source repos"
-          commit-message: "Sync skills from their source repos"
-          body: |
-            Automated refresh of the bundled skill snapshots:
-
-            - `skills/extend-api/SKILL.md` from https://docs.extend.ai/agents.md
-            - `skills/extend-cli/SKILL.md` from the latest CLI release's `extend skill`
-
-            Em dashes normalized per repo policy. Merging this will trigger
-            marketplace re-review on platforms that watch the repo.
-          delete-branch: true
-
-      # Skills are generated snapshots, so there is nothing for a human to
-      # review; the PR exists only as an audit record of each sync.
-      - name: Merge the sync PR
-        if: steps.pr.outputs.pull-request-number
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh pr merge --squash --delete-branch "${{ steps.pr.outputs.pull-request-number }}"
+      - name: Commit and push if the skills drifted
+        run: |
+          if git diff --quiet -- skills; then
+            echo "Skills match their sources; nothing to sync."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add skills
+          git commit -m "Sync skills from their source repos" \
+            -m "extend-api from https://docs.extend.ai/agents.md; extend-cli from the latest CLI release's 'extend skill'. Em dashes normalized. Pushing to main may trigger marketplace re-review."
+          git push
