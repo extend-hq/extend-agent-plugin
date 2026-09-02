@@ -1,6 +1,6 @@
 ---
 name: extend-cli
-description: Use when extracting structured data from PDFs or images, parsing documents to text or markdown, classifying or identifying the type of a document (e.g. telling MSA from SOW from NDA), splitting multi-document bundles into segments, filling PDF forms via a values schema, detecting form fields to scaffold an edit schema, running multi-step document AI workflows, inspecting, watching, or listing Extend runs by ID (exr_, pr_, clr_, splr_, edr_, sgr_, workflow_run_), or uploading documents to an Extend workspace and managing the resulting file_xxx IDs — even if the user describes the task without naming Extend (e.g. "pull line items from these invoices", "OCR these receipts", "categorize this contract", "fill out this PDF form", or "split this combined PDF into individual statements").
+description: Use when extracting structured data from PDFs or images, parsing documents to text or markdown, classifying or identifying the type of a document (e.g. telling MSA from SOW from NDA), splitting multi-document bundles into segments, filling PDF forms via a values schema, detecting form fields to scaffold an edit schema, running multi-step document AI workflows, inspecting, watching, or listing Extend runs by ID (exr_, pr_, clr_, splr_, edr_, sgr_, workflow_run_), or uploading documents to an Extend workspace and managing the resulting file_xxx IDs - even if the user describes the task without naming Extend (e.g. "pull line items from these invoices", "OCR these receipts", "categorize this contract", "fill out this PDF form", or "split this combined PDF into individual statements").
 ---
 
 # Extend CLI
@@ -12,7 +12,7 @@ description: Use when extracting structured data from PDFs or images, parsing do
     export EXTEND_API_KEY=sk_xxx              # API key: scripts, CI, agents
     extend login                              # browser OAuth: interactive use
 
-A stored `extend login` session is used automatically when no API key resolves; an API key always takes precedence. If neither is configured, ask the user to run `extend login` or supply `EXTEND_API_KEY` — never invent a key.
+A stored `extend login` session is used automatically when no API key resolves; an API key always takes precedence. If neither is configured, ask the user to run `extend login` or supply `EXTEND_API_KEY` - never invent a key.
 
     export EXTEND_REGION=us|eu                # optional, default us
     export EXTEND_WORKSPACE_ID=ws_xxx         # required only for org-scoped API keys
@@ -33,13 +33,13 @@ Per-call equivalents: `--region eu`, `--workspace ws_xxx`. For API-version pinni
 
 `<input>` is a local file path (auto-uploaded), a `file_xxx` ID, or an `https://` URL. For batches of up to 1,000 inputs, use `<verb> batch` or `workflows run batch`.
 
-Every action verb that needs a processor takes `--using <id>` — the ID prefix tells you the type: `ex_*` (extractors), `cl_*` (classifiers), `spl_*` (splitters), `workflow_*` (workflows). `parse` and `detect-form` run alone (no processor); `edit` takes `--instructions` (free-form prose).
+Every action verb that needs a processor takes `--using <id>` - the ID prefix tells you the type: `ex_*` (extractors), `cl_*` (classifiers), `spl_*` (splitters), `workflow_*` (workflows). `parse` and `detect-form` run alone (no processor); `edit` takes `--instructions` (free-form prose).
 
 ## When this skill is active
 
 - **Documents come from disk, not from messages.** When the user references a document ("this contract", "these invoices", "the PDF") without giving a path, glance at the current working directory for matching files (`*.pdf`, `*.png`, `*.jpg`, `*.tif`) before asking. Real users say "this PDF" when there's exactly one in cwd.
 - **File uploads always go through `extend files upload`.** Never substitute a host-tool File API (e.g. an inline file upload tool that returns its own `file_xxx` ID). The skill's file IDs are only legitimate when produced by `extend files upload` or returned in another `extend` response.
-- **Run IDs (`exr_`/`pr_`/`clr_`/`splr_`/`edr_`/`workflow_run_`) are Extend's, not the host's.** When the user mentions one, reach for the typed runs commands (`extend <verb> runs get|watch|cancel`) — not a host-tool task tracker.
+- **Run IDs (`exr_`/`pr_`/`clr_`/`splr_`/`edr_`/`workflow_run_`) are Extend's, not the host's.** When the user mentions one, reach for the typed runs commands (`extend <verb> runs get|watch|cancel`) - not a host-tool task tracker.
 - **"OCR" alone is ambiguous; the user's intent disambiguates.** If they want specific values out (totals, line items, dates, names) → `extract` with a configured extractor. If they want raw text or markdown of the page → `parse`. "OCR this receipt and grab the total" is `extract`, not `parse`.
 
 ## Wait, async, watch
@@ -69,7 +69,7 @@ For the per-command wait/profile/failure-status table: `extend help lifecycle`.
 
 ## Pagination
 
-List commands return one page by default. Pass `--max N` to fetch up to N total results — the CLI auto-paginates internally and never makes you handle page tokens:
+List commands return one page by default. Pass `--max N` to fetch up to N total results - the CLI auto-paginates internally and never makes you handle page tokens:
 
     extend extract runs list --status FAILED --max 100
 
@@ -149,7 +149,7 @@ Use `--all` only when you genuinely want every result (scripts, not agents). Pow
 ### Configure a webhook for workflow completions
 
 1. Create the receiving endpoint and capture the signing secret
-   (returned only once — store it):
+   (returned only once - store it):
 
        extend webhooks endpoints create --url https://x.com/hook \
            --name prod \
@@ -211,7 +211,7 @@ When the values live in a source document (e.g. fill a 1040 from a W-2):
        extend extract w2.pdf --using ex_xxx -o json > w2-values.json
 
 2. Fill the target form with those values via `--instructions`,
-   `--schema`, or both — see "Fill a PDF form" above. Make sure the
+   `--schema`, or both - see "Fill a PDF form" above. Make sure the
    document you pass to `extend edit` is the *target* (the form), not
    the *source* (the document you read values from).
 
@@ -241,74 +241,74 @@ When the values live in a source document (e.g. fill a 1040 from a W-2):
 
 ## Command reference
 
-One line per command — invocation plus a summary. **Run `extend <command> --help` for flags, examples, and per-command gotchas.**
+One line per command - invocation plus a summary. **Run `extend <command> --help` for flags, examples, and per-command gotchas.**
 
 ### Action verbs
 
-- `extend extract <input>` — Run extraction on a document.
-- `extend extract batch <input>...` — Run extraction on up to 1,000 files in one batch.
-- `extend extract runs get <run-id>` — Fetch a single extract run by ID.
-- `extend extract runs list` — List extract runs with filters.
-- `extend extract runs watch <run-id>` — Poll an extract run until it reaches a terminal state.
-- `extend extract runs cancel <run-id>` — Cancel an extract run by ID.
-- `extend extract runs delete <run-id>` — Delete an extract run record.
-- `extend extract batches get <batch-id>` — Show one extract batch run by ID.
-- `extend extract batches watch <batch-id>` — Poll an extract batch until it reaches a terminal state.
-- `extend parse <input>` — Parse a document into structured text.
-- `extend parse batch <input>...` — Parse up to 1,000 files in one batch.
-- `extend parse runs get <run-id>` — Fetch a single parse run by ID.
-- `extend parse runs list` — List parse runs with filters.
-- `extend parse runs watch <run-id>` — Poll a parse run until it reaches a terminal state.
-- `extend parse runs delete <run-id>` — Delete a parse run record.
-- `extend parse batches get <batch-id>` — Show one parse batch run by ID.
-- `extend parse batches watch <batch-id>` — Poll a parse batch until it reaches a terminal state.
-- `extend classify <input>` — Classify a document into a configured category.
-- `extend classify batch <input>...` — Run classification on up to 1,000 files in one batch.
-- `extend classify runs get <run-id>` — Fetch a single classify run by ID.
-- `extend classify runs list` — List classify runs with filters.
-- `extend classify runs watch <run-id>` — Poll a classify run until it reaches a terminal state.
-- `extend classify runs cancel <run-id>` — Cancel a classify run by ID.
-- `extend classify runs delete <run-id>` — Delete a classify run record.
-- `extend classify batches get <batch-id>` — Show one classify batch run by ID.
-- `extend classify batches watch <batch-id>` — Poll a classify batch until it reaches a terminal state.
-- `extend split <input>` — Split a multi-document PDF into segments.
-- `extend split batch <input>...` — Run splitting on up to 1,000 files in one batch.
-- `extend split runs get <run-id>` — Fetch a single split run by ID.
-- `extend split runs list` — List split runs with filters.
-- `extend split runs watch <run-id>` — Poll a split run until it reaches a terminal state.
-- `extend split runs cancel <run-id>` — Cancel a split run by ID.
-- `extend split runs delete <run-id>` — Delete a split run record.
-- `extend split batches get <batch-id>` — Show one split batch run by ID.
-- `extend split batches watch <batch-id>` — Poll a split batch until it reaches a terminal state.
-- `extend edit <input>` — Fill a PDF form using a schema with values.
-- `extend edit templates get <template-id>` — Fetch a saved edit template by ID.
-- `extend edit runs get <run-id>` — Fetch a single edit run by ID.
-- `extend edit runs watch <run-id>` — Poll an edit run until it reaches a terminal state.
-- `extend edit runs delete <run-id>` — Delete an edit run record.
-- `extend detect-form <input>` — Detect form fields and scaffold an edit schema.
-- `extend detect-form runs get <run-id>` — Fetch a single form detection run by ID.
-- `extend detect-form runs watch <run-id>` — Poll a form detection run until it reaches a terminal state.
+- `extend extract <input>` - Run extraction on a document.
+- `extend extract batch <input>...` - Run extraction on up to 1,000 files in one batch.
+- `extend extract runs get <run-id>` - Fetch a single extract run by ID.
+- `extend extract runs list` - List extract runs with filters.
+- `extend extract runs watch <run-id>` - Poll an extract run until it reaches a terminal state.
+- `extend extract runs cancel <run-id>` - Cancel an extract run by ID.
+- `extend extract runs delete <run-id>` - Delete an extract run record.
+- `extend extract batches get <batch-id>` - Show one extract batch run by ID.
+- `extend extract batches watch <batch-id>` - Poll an extract batch until it reaches a terminal state.
+- `extend parse <input>` - Parse a document into structured text.
+- `extend parse batch <input>...` - Parse up to 1,000 files in one batch.
+- `extend parse runs get <run-id>` - Fetch a single parse run by ID.
+- `extend parse runs list` - List parse runs with filters.
+- `extend parse runs watch <run-id>` - Poll a parse run until it reaches a terminal state.
+- `extend parse runs delete <run-id>` - Delete a parse run record.
+- `extend parse batches get <batch-id>` - Show one parse batch run by ID.
+- `extend parse batches watch <batch-id>` - Poll a parse batch until it reaches a terminal state.
+- `extend classify <input>` - Classify a document into a configured category.
+- `extend classify batch <input>...` - Run classification on up to 1,000 files in one batch.
+- `extend classify runs get <run-id>` - Fetch a single classify run by ID.
+- `extend classify runs list` - List classify runs with filters.
+- `extend classify runs watch <run-id>` - Poll a classify run until it reaches a terminal state.
+- `extend classify runs cancel <run-id>` - Cancel a classify run by ID.
+- `extend classify runs delete <run-id>` - Delete a classify run record.
+- `extend classify batches get <batch-id>` - Show one classify batch run by ID.
+- `extend classify batches watch <batch-id>` - Poll a classify batch until it reaches a terminal state.
+- `extend split <input>` - Split a multi-document PDF into segments.
+- `extend split batch <input>...` - Run splitting on up to 1,000 files in one batch.
+- `extend split runs get <run-id>` - Fetch a single split run by ID.
+- `extend split runs list` - List split runs with filters.
+- `extend split runs watch <run-id>` - Poll a split run until it reaches a terminal state.
+- `extend split runs cancel <run-id>` - Cancel a split run by ID.
+- `extend split runs delete <run-id>` - Delete a split run record.
+- `extend split batches get <batch-id>` - Show one split batch run by ID.
+- `extend split batches watch <batch-id>` - Poll a split batch until it reaches a terminal state.
+- `extend edit <input>` - Fill a PDF form using a schema with values.
+- `extend edit templates get <template-id>` - Fetch a saved edit template by ID.
+- `extend edit runs get <run-id>` - Fetch a single edit run by ID.
+- `extend edit runs watch <run-id>` - Poll an edit run until it reaches a terminal state.
+- `extend edit runs delete <run-id>` - Delete an edit run record.
+- `extend detect-form <input>` - Detect form fields and scaffold an edit schema.
+- `extend detect-form runs get <run-id>` - Fetch a single form detection run by ID.
+- `extend detect-form runs watch <run-id>` - Poll a form detection run until it reaches a terminal state.
 
 ### Inspection
 
-- `extend files upload <path>` — Upload a local file and print its file_id.
-- `extend files list` — List uploaded files.
-- `extend files get <file-id>` — Show metadata for a file (with presigned download URL).
-- `extend files delete <file-id>` — Delete an uploaded file.
-- `extend files download <file-id>` — Download a file to local disk (or stdout with -O -).
-- `extend download <id>` — Download file artifacts produced by a run, or fetch a file by ID.
+- `extend files upload <path>` - Upload a local file and print its file_id.
+- `extend files list` - List uploaded files.
+- `extend files get <file-id>` - Show metadata for a file (with presigned download URL).
+- `extend files delete <file-id>` - Delete an uploaded file.
+- `extend files download <file-id>` - Download a file to local disk (or stdout with -O -).
+- `extend download <id>` - Download file artifacts produced by a run, or fetch a file by ID.
 
 ### Processor resources
 
 **Extractors, classifiers, splitters, and workflows share an identical seven-command shape.** Substitute `<plural>` and the corresponding ID prefix (`ex_`, `cl_`, `spl_`, and `workflow_`):
 
-- `extend <plural> list` — Page through processors of this type.
-- `extend <plural> get <id>` — Show one processor.
-- `extend <plural> create --from-file body.json` — New draft.
-- `extend <plural> update <id> --from-file patch.json` — Edit the draft. Deployed versions are immutable; the draft is the only mutable surface.
-- `extend <plural> versions list <id>` — List published versions.
-- `extend <plural> versions get <id> <version|draft>` — Show one version (or the draft).
-- `extend <plural> versions create <id> --release-type major|minor` — Publish the draft as a new version.
+- `extend <plural> list` - Page through processors of this type.
+- `extend <plural> get <id>` - Show one processor.
+- `extend <plural> create --from-file body.json` - New draft.
+- `extend <plural> update <id> --from-file patch.json` - Edit the draft. Deployed versions are immutable; the draft is the only mutable surface.
+- `extend <plural> versions list <id>` - List published versions.
+- `extend <plural> versions get <id> <version|draft>` - Show one version (or the draft).
+- `extend <plural> versions create <id> --release-type major|minor` - Publish the draft as a new version.
 
 **Workflows differ:** `versions create` uses `--name <deploy-name>` instead of `--release-type`. The deployed name is what `extend workflows run --version` references.
 
@@ -316,39 +316,39 @@ One line per command — invocation plus a summary. **Run `extend <command> --he
 
 ### Webhooks
 
-- `extend webhooks endpoints list` — List webhook endpoints.
-- `extend webhooks endpoints get <endpoint-id>` — Show one webhook endpoint.
-- `extend webhooks endpoints create` — Create a webhook endpoint.
-- `extend webhooks endpoints update <endpoint-id>` — Update mutable fields on a webhook endpoint.
-- `extend webhooks endpoints delete <endpoint-id>` — Delete a webhook endpoint.
-- `extend webhooks subscriptions list` — List webhook subscriptions.
-- `extend webhooks subscriptions get <subscription-id>` — Show one webhook subscription.
-- `extend webhooks subscriptions create` — Subscribe an endpoint to events for a specific resource.
-- `extend webhooks subscriptions update <subscription-id>` — Replace the enabled events on a webhook subscription.
-- `extend webhooks subscriptions delete <subscription-id>` — Delete a webhook subscription.
-- `extend webhooks verify` — Verify the HMAC-SHA256 signature on a webhook payload.
+- `extend webhooks endpoints list` - List webhook endpoints.
+- `extend webhooks endpoints get <endpoint-id>` - Show one webhook endpoint.
+- `extend webhooks endpoints create` - Create a webhook endpoint.
+- `extend webhooks endpoints update <endpoint-id>` - Update mutable fields on a webhook endpoint.
+- `extend webhooks endpoints delete <endpoint-id>` - Delete a webhook endpoint.
+- `extend webhooks subscriptions list` - List webhook subscriptions.
+- `extend webhooks subscriptions get <subscription-id>` - Show one webhook subscription.
+- `extend webhooks subscriptions create` - Subscribe an endpoint to events for a specific resource.
+- `extend webhooks subscriptions update <subscription-id>` - Replace the enabled events on a webhook subscription.
+- `extend webhooks subscriptions delete <subscription-id>` - Delete a webhook subscription.
+- `extend webhooks verify` - Verify the HMAC-SHA256 signature on a webhook payload.
 
 ### Evaluations
 
-- `extend evaluations list` — List evaluation sets.
-- `extend evaluations get <evaluation-set-id>` — Show one evaluation set.
-- `extend evaluations create` — Create an evaluation set.
-- `extend evaluations items list <evaluation-set-id>` — List items in an evaluation set.
-- `extend evaluations items get <evaluation-set-id> <item-id>` — Show one evaluation item.
-- `extend evaluations items create <evaluation-set-id>` — Add one or more items to an evaluation set (bulk create).
-- `extend evaluations items update <evaluation-set-id> <item-id>` — Update an evaluation item.
-- `extend evaluations items delete <evaluation-set-id> <item-id>` — Delete an evaluation item.
-- `extend evaluations runs create <evaluation-set-id>` — Start an evaluation set run.
-- `extend evaluations runs get <run-id>` — Show one evaluation run.
+- `extend evaluations list` - List evaluation sets.
+- `extend evaluations get <evaluation-set-id>` - Show one evaluation set.
+- `extend evaluations create` - Create an evaluation set.
+- `extend evaluations items list <evaluation-set-id>` - List items in an evaluation set.
+- `extend evaluations items get <evaluation-set-id> <item-id>` - Show one evaluation item.
+- `extend evaluations items create <evaluation-set-id>` - Add one or more items to an evaluation set (bulk create).
+- `extend evaluations items update <evaluation-set-id> <item-id>` - Update an evaluation item.
+- `extend evaluations items delete <evaluation-set-id> <item-id>` - Delete an evaluation item.
+- `extend evaluations runs create <evaluation-set-id>` - Start an evaluation set run.
+- `extend evaluations runs get <run-id>` - Show one evaluation run.
 
 ## When this skill isn't enough
 
 The body above shows the CLI's *shape*. For depth, use the help system before guessing:
 
-- `extend <command> --help` — every flag, multiple worked examples, and the full per-command gotcha list.
-- `extend help auth` — Authentication: env vars, regions, workspace, API version. Use on auth errors, when working with org-scoped API keys, or when picking a region.
-- `extend help output` — Output formats, --jq, color, pagination, per-command defaults. Use when an output format is unexpected or when writing a non-trivial pagination loop.
-- `extend help lifecycle` — Run lifecycle: sync vs async, polling, exit codes, watching. Use when reasoning about run states, polling profiles, or when `--exit-status` should fail.
-- `extend help errors` — Error envelope, request_id, retry/backoff, common codes. Use when interpreting an error envelope, picking up a `request_id`, or filing a support ticket.
+- `extend <command> --help` - every flag, multiple worked examples, and the full per-command gotcha list.
+- `extend help auth` - Authentication: env vars, regions, workspace, API version. Use on auth errors, when working with org-scoped API keys, or when picking a region.
+- `extend help output` - Output formats, --jq, color, pagination, per-command defaults. Use when an output format is unexpected or when writing a non-trivial pagination loop.
+- `extend help lifecycle` - Run lifecycle: sync vs async, polling, exit codes, watching. Use when reasoning about run states, polling profiles, or when `--exit-status` should fail.
+- `extend help errors` - Error envelope, request_id, retry/backoff, common codes. Use when interpreting an error envelope, picking up a `request_id`, or filing a support ticket.
 
 These commands run offline.

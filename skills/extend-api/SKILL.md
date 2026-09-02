@@ -1,6 +1,6 @@
 ---
 name: extend-api
-description: Use when writing code against the Extend document processing API or SDKs — building extraction, classification, splitting, parsing, PDF form-filling, or workflow integrations, authoring extraction schemas, or handling Extend webhooks — in Python, TypeScript, Java, or Go.
+description: Use when writing code against the Extend document processing API or SDKs - building extraction, classification, splitting, parsing, PDF form-filling, or workflow integrations, authoring extraction schemas, or handling Extend webhooks - in Python, TypeScript, Java, or Go.
 ---
 > ## Documentation Index
 > Fetch the complete documentation index at: https://docs.extend.ai/llms.txt
