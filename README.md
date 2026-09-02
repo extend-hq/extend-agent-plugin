@@ -11,12 +11,12 @@ This plugin bundles:
   covering extraction, parsing, classification, splitting, PDF editing,
   workflows, files, webhooks, and evaluations. Sign-in is OAuth: your client
   opens a browser window where you choose the workspace and environment the
-  connection may use.
-- **`extend-platform` skill** — cross-tool interaction patterns for driving
-  Extend through the MCP server (orientation, targeting, async runs, uploads,
-  config authoring).
+  connection may use. The server teaches its own cross-tool usage patterns
+  through MCP server instructions and per-response guidance, so no companion
+  skill is needed for it.
 - **`extend-cli` skill** — how to drive the [`extend` CLI](https://docs.extend.ai/cli)
-  for shell, script, and CI work against local files.
+  for shell, script, and CI work against local files. Generated from the CLI
+  itself (`extend skill`); regenerate after CLI releases.
 
 ## Install
 
