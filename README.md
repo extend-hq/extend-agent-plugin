@@ -1,5 +1,7 @@
 # Extend Agent Plugin
 
+[![smithery badge](https://smithery.ai/badge/extend/extend)](https://smithery.ai/servers/extend/extend)
+
 Document processing for agents, packaged as a plugin. [Extend](https://extend.ai)
 turns unstructured documents (PDFs, images, Office files, spreadsheets) into
 structured data: parsing, field extraction, classification, splitting,
