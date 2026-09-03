@@ -1,0 +1,17 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "ai.extend/extend",
+  "description": "Turn documents into structured data: parse, extract, classify, split, and fill PDF forms.",
+  "repository": {
+    "url": "https://github.com/extend-hq/extend-agent-plugin",
+    "source": "github"
+  },
+  "version": "1.0.0",
+  "websiteUrl": "https://docs.extend.ai/mcp",
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://mcp.extend.ai/mcp"
+    }
+  ]
+}

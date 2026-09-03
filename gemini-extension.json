@@ -1,0 +1,10 @@
+{
+  "name": "extend",
+  "version": "1.0.0",
+  "description": "Document processing for agents: parse, extract, classify, and split PDFs, images, Office docs, spreadsheets, and emails, plus PDF form filling. Connects the hosted Extend MCP server and bundles the extend-api and extend-cli skills.",
+  "mcpServers": {
+    "extend": {
+      "httpUrl": "https://mcp.extend.ai/mcp"
+    }
+  }
+}

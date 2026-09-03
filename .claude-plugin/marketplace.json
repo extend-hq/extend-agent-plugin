@@ -1,0 +1,20 @@
+{
+  "name": "extend",
+  "owner": {
+    "name": "Extend",
+    "email": "support@extend.ai",
+    "url": "https://extend.ai"
+  },
+  "plugins": [
+    {
+      "name": "extend",
+      "source": "./",
+      "description": "Document processing for agents: parse, extract, classify, and split PDFs, images, Office docs, spreadsheets, and emails, plus PDF form filling. Bundles the hosted Extend MCP server and the extend-api and extend-cli skills.",
+      "version": "1.0.0",
+      "author": {
+        "name": "Extend",
+        "url": "https://extend.ai"
+      }
+    }
+  ]
+}
