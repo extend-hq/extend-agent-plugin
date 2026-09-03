@@ -534,6 +534,36 @@ This keeps iterations cheap and avoids reintroducing earlier mistakes when a sin
 
 ---
 
+## Versioning: processors and workflows
+
+Both processors and workflows have one editable **draft** and immutable **published/deployed versions**. Edits always land on the draft; publishing snapshots it. Nothing that references a specific version ever changes behaviour when you publish again.
+
+| | Processors (extractor / classifier / splitter) | Workflows |
+|---|---|---|
+| Edit the draft | `extractors.update(id, config=...)` (same for classifiers/splitters) | Studio editor, or deploy `steps` directly |
+| Publish / deploy | `extractorVersions.create(id, releaseType: "major"\|"minor", description?)` → `"1.0"`, `"1.1"`, `"2.0"` | `workflowVersions.create(id, { name?, steps? })` → `"1"`, `"2"`, ... |
+| List versions | `extractorVersions.list(id)` (draft first, then newest) | `workflowVersions.list(id)` |
+| Reference in a run | `extractor: { id, version }` on `extract` / `extractRuns.create` | `workflow: { id, version }` on `workflowRuns.create` |
+| `version` omitted | `"latest"`: newest published, else draft | Newest deployed, else draft |
+| `"draft"` | Current draft (development only) | Current draft (development only) |
+| Pinned | `"1.1"` | `"3"` |
+
+**Major vs minor** is only a numbering signal: minor for changes that keep the output shape (descriptions, rules, base processor); major when the schema, classification types, or split identifiers change so downstream code must be updated.
+
+**Workflow steps reference processors with an explicit `version`** (`"latest"`, `"draft"`, or `"1.1"`). Deploying a workflow version freezes that string, but `"latest"` still resolves at run time, so a fully reproducible deployed workflow needs pinned processor versions in its steps.
+
+**Recommended promotion loop:** update the draft → run the evaluation set against `"draft"` → publish → move the version string in your config/workflow step → deploy the workflow.
+
+Docs: https://docs.extend.ai/evaluation/publishing-processors (processors) and https://docs.extend.ai/workflows/workflow-versioning (workflows), all four SDKs.
+
+---
+
+## Test environment
+
+A **test API key** routes every request to an isolated test environment: same base URL, same code, no production data, no production webhooks. Workflow and processor definitions are shared between environments; runs and webhook deliveries are not. Create test keys and test webhook endpoints with **Test Environment** toggled on in Studio's Developers tab. All SDKs read `EXTEND_API_KEY`; switch environments by switching the key. Docs: https://docs.extend.ai/general/test-environment-guide
+
+---
+
 ## Extraction Schema (JSON Schema)
 
 Extractors use JSON Schema to define output structure. Key rules:
@@ -758,16 +788,28 @@ Docs: https://docs.extend.ai/general/rate-limits (includes current limits by end
 
 ## Evaluation Sets
 
-Evaluation sets let you benchmark processor accuracy against ground truth.
+Evaluation sets benchmark a processor (extractor, classifier, or splitter) against reviewed ground truth; they can also be run against workflows, which this section does not cover. **Use the API for this rather than building a custom harness**: the loop is four calls and the metrics are computed server-side with the same scoring Studio uses.
 
-1. Create an eval set linked to an extractor
-2. Add items (files + expected outputs)
-3. Run the eval set against a processor version
-4. Review per-field accuracy metrics
+| Step | Endpoint | SDK (TS / Python) |
+|------|----------|-------------------|
+| 1. Create a set for a processor | `POST /evaluation_sets` `{ name, entityId, description? }` | `evaluationSets.create` / `evaluation_sets.create` |
+| 2. Upload each file | `POST /files/upload` | `files.upload` |
+| 3. Add items (≤100 per call) | `POST /evaluation_sets/{id}/items` `{ items: [{ fileId, expectedOutput }] }` | `evaluationSetItems.create` / `evaluation_set_items.create` |
+| 4. Start a run | `POST /evaluation_set_runs` `{ evaluationSetId, entity?: { id, version? }, evaluationSetItemIds? }` | `evaluationSetRuns.create` / `evaluation_set_runs.create` |
+| 5. Poll until terminal | `GET /evaluation_set_runs/{id}` | `evaluationSetRuns.retrieve` / `evaluation_set_runs.retrieve` |
+| 6. Fix wrong ground truth | `POST /evaluation_sets/{id}/items/{itemId}` `{ expectedOutput }` | `evaluationSetItems.update` / `evaluation_set_items.update` |
 
-Available via both the Studio UI and the API.
+**`expectedOutput` shape** depends on the processor type:
 
-Docs: https://docs.extend.ai/evaluation/overview
+- Extractor: `{ "value": { ...object conforming to the extractor schema... } }` - nest under `value`, include every schema property. Easiest source: run the extractor on the file, correct the output, save it.
+- Classifier: `{ "id": "<classification id>", "type": "<classification name>" }`
+- Splitter: `{ "splits": [{ "classificationId", "type", "startPage", "endPage" }] }`
+
+**Run semantics:** `entity.version` accepts `"draft"`, `"latest"`, or a published version like `"1.0"`; omitting `entity` runs the set's default processor at `draft`. Status goes `PENDING` → `PROCESSING` → `PROCESSED` | `FAILED` | `CANCELLED`. No SDK has a polling helper for evaluation runs; poll every few seconds. Read `metrics` only when status is `PROCESSED`.
+
+**`metrics`** is discriminated on `type`: `EXTRACT` has `accuracy` and `fieldMetrics` (field path → `{ countTotal, countPresent, countExpected, countAccurate, accuracy }`, nested fields dot-joined); `CLASSIFY` has `accuracy` and `classificationMetrics` (per-class precision/recall/F1); `SPLITTER` has `precision`, `recall`, `f1`. The run returns aggregates only: per-document diffs, CSV export, custom matchers (fuzzy, LLM judge, vector), and field exclusion are Studio features.
+
+Docs: https://docs.extend.ai/evaluation/creating-evaluation-sets and https://docs.extend.ai/evaluation/running-evaluation-sets (all four SDKs)
 
 ---
 
@@ -784,6 +826,12 @@ Docs: https://docs.extend.ai/evaluation/overview
 | Webhook setup | https://docs.extend.ai/webhooks/configuration |
 | Webhook events | https://docs.extend.ai/webhooks/events |
 | Workflow creation | https://docs.extend.ai/workflows/overview |
+| Processors (saved, versioned configs) | https://docs.extend.ai/evaluation/processors |
+| Evaluation sets (create) | https://docs.extend.ai/evaluation/creating-evaluation-sets |
+| Evaluation sets (run + metrics) | https://docs.extend.ai/evaluation/running-evaluation-sets |
+| Workflow versioning (deploy, pin) | https://docs.extend.ai/workflows/workflow-versioning |
+| Publishing processor versions | https://docs.extend.ai/evaluation/publishing-processors |
+| Test environment | https://docs.extend.ai/general/test-environment-guide |
 | API versioning | https://docs.extend.ai/api-reference/api-versioning |
 | 2026-02-09 migration | https://docs.extend.ai/api-reference/migrations/2026-02-09/overview |
 | JSON Schema migration | https://docs.extend.ai/migrating-to-json-schema |
