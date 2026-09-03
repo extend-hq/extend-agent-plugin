@@ -26,21 +26,6 @@ The skills also install standalone, without the plugin:
 npx skills add extend-hq/extend-agent-plugin
 ```
 
-## Regenerating the skills
-
-Both skills are generated snapshots; do not edit them by hand. A scheduled
-workflow (`.github/workflows/sync-skills.yml`) refreshes them weekly from
-their sources (the served docs `agents.md` and the latest CLI release) and
-opens a PR when they drift. To refresh manually:
-
-```bash
-# extend-api: frontmatter + the served agents.md (refresh on docs changes)
-{ sed -n '1,4p' skills/extend-api/SKILL.md; curl -fsSL https://docs.extend.ai/agents.md; } > /tmp/extend-api.md && mv /tmp/extend-api.md skills/extend-api/SKILL.md
-
-# extend-cli: emitted by the CLI itself (refresh on CLI releases)
-extend skill > skills/extend-cli/SKILL.md
-```
-
 ## Install
 
 - **Cursor**: install "Extend" from the [Cursor Marketplace](https://cursor.com/marketplace),
