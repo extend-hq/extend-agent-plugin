@@ -1,0 +1,14 @@
+{
+  "name": "extend",
+  "version": "1.0.0",
+  "description": "Document processing for agents: parse, extract, classify, and split PDFs, images, Office docs, spreadsheets, and emails, plus PDF form filling. Bundles the hosted Extend MCP server and the extend-api and extend-cli skills.",
+  "author": {
+    "name": "Extend",
+    "email": "support@extend.ai"
+  },
+  "homepage": "https://docs.extend.ai/mcp",
+  "repository": "https://github.com/extend-hq/extend-agent-plugin",
+  "license": "MIT",
+  "keywords": ["documents", "pdf", "ocr", "extraction", "parsing", "classification", "document-ai", "mcp"],
+  "logo": "assets/logo.png"
+}

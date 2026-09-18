@@ -6,5 +6,9 @@
   "author": {
     "name": "Extend",
     "url": "https://extend.ai"
-  }
+  },
+  "homepage": "https://docs.extend.ai/mcp",
+  "repository": "https://github.com/extend-hq/extend-agent-plugin",
+  "license": "MIT",
+  "keywords": ["documents", "pdf", "ocr", "extraction", "parsing", "classification", "document-ai", "mcp"]
 }

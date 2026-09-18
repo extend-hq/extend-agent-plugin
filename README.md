@@ -40,13 +40,17 @@ npx skills add extend-hq/extend-agent-plugin
 
 ## Repository layout
 
-Two manifest formats coexist so one repository serves both ecosystems:
+Several manifest formats coexist so one repository serves every ecosystem:
 
 | Path | Purpose |
 | --- | --- |
-| `plugin.json`, `mcp.json` | [Agent Plugins](https://agent-plugins.org) standard (Cursor and other conformant clients) |
+| `plugin.json`, `mcp.json` | [Agent Plugins](https://agent-plugins.org) standard (any conformant client) |
+| `.cursor-plugin/plugin.json` | [Cursor plugin](https://cursor.com/docs/reference/plugins) manifest (marketplace metadata and logo; shares `mcp.json`) |
 | `.claude-plugin/plugin.json`, `.mcp.json` | [Claude plugin](https://code.claude.com/docs/en/plugins-reference) manifest |
-| `skills/` | [Agent Skills](https://agentskills.io) shared by both formats |
+| `gemini-extension.json` | [Gemini CLI extension](https://geminicli.com/extensions) manifest |
+| `server.json` | [Official MCP Registry](https://registry.modelcontextprotocol.io) entry (`ai.extend/extend`) |
+| `skills/` | [Agent Skills](https://agentskills.io) shared by every format |
+| `assets/` | Logo referenced by the manifests |
 
 ## Privacy and terms
 
