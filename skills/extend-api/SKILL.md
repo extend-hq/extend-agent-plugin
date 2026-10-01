@@ -826,6 +826,8 @@ Docs: https://docs.extend.ai/evaluation/creating-evaluation-sets and https://doc
 | Webhook setup | https://docs.extend.ai/webhooks/configuration |
 | Webhook events | https://docs.extend.ai/webhooks/events |
 | Workflow creation | https://docs.extend.ai/workflows/overview |
+| Code and semantic validation (API and Studio) | https://docs.extend.ai/workflows/workflow-steps/validation-step |
+| Ordered router branches and fallback (API and Studio) | https://docs.extend.ai/workflows/workflow-steps/router-step |
 | Processors (saved, versioned configs) | https://docs.extend.ai/evaluation/processors |
 | Evaluation sets (create) | https://docs.extend.ai/evaluation/creating-evaluation-sets |
 | Evaluation sets (run + metrics) | https://docs.extend.ai/evaluation/running-evaluation-sets |
