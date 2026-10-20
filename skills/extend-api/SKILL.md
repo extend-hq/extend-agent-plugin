@@ -271,6 +271,23 @@ SDKs accept a `baseUrl` (TypeScript) or `base_url` (Python) parameter to select 
 | POST | `/form_detection_runs` | Start a form detection run (async) |
 | GET | `/form_detection_runs/{id}` | Get a form detection run |
 
+### Verify
+
+Verify checks a single PDF, JPEG, or PNG for tampering, forgery, AI generation, AI edits, and more.
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/verify` | Verify a file (sync; 5-min timeout on both engines, usually surfacing as a `504` with no `runId`; the run keeps processing, so don't resubmit. Use `/verify_runs` for `verify_agentic`) |
+| POST | `/verify_runs` | Verify a file (async) |
+| GET | `/verify_runs/{id}` | Get verify run (zero-retention results are delivered once) |
+| GET | `/verify_runs` | List verify run summaries (filters: `status`, `source`, `sourceId`, `riskLevel`, `fileNameContains`; `sortBy`, `sortDir`, `nextPageToken`, `maxPageSize`) |
+| POST | `/verify_runs/{id}/cancel` | Cancel an in-progress verify run |
+| DELETE | `/verify_runs/{id}` | Delete a verify run and its derived data (cancels first if processing; input file kept) |
+
+Request: `file` (`{url}` or `{id}`; no text/base64), optional `config` (`engine`: `verify_agentic` default or `verify_light`; `engineVersion`: `latest` default or e.g. `0.1.0`; `advancedOptions.requireParsing`: light parses only when `true`, agentic always parses and rejects `false`; an existing parse of the file made with Verify's default parse settings is reused unless the file is zero-retention), optional `metadata`. Unknown `config` keys return `400`. Every supported check runs on every run; there is no signal allowlist.
+
+Response `output` (when `PROCESSED`): `riskLevel` (`LOW`/`MEDIUM`/`HIGH`; `LOW` = nothing detected, never authenticity), `summary`, `signals[]` each with `id` (`vs_`), `type` (a Public Signal category), `riskAssessment` (`{type: "LEVEL", level}`), `summary`, `evidence[]` (`evidenceId`, `type` in `value_comparison | validation | inventory | history | structural_pattern | model_prediction`, `data`, `locations[]` with `page` (`number` from 1, `width`, `height`), top-left `boundingBox` (`left`/`top`/`right`/`bottom`), `objectRefs`, `byteRange`). `config` echoes `engine`, `engineVersion`, and `advancedOptions.requireParsing`. `file` is `null` once the input file is deleted. List items carry `riskLevel` (null until processed, and null again once a zero-retention result is purged) instead of `output`. Statuses: `PROCESSING`, `PROCESSED`, `FAILED`, `CANCELLED`. Failure reasons: `FILE_TYPE_NOT_SUPPORTED`, `NO_APPLICABLE_SIGNALS`, `PARSE_FAILED`, `REQUEST_ABORTED`, `INTERNAL_ERROR`.
+
 ### Workflows
 
 | Method | Endpoint | Description |
@@ -497,6 +514,32 @@ for (const stepRun of result.stepRuns ?? []) {
 ```
 
 ---
+
+### Verify a document (async with polling) -- Python
+
+```python
+import time
+
+run = client.verify_runs.create(file={"url": "https://example.com/statement.pdf"})
+while run.status == "PROCESSING":
+    time.sleep(2)
+    run = client.verify_runs.retrieve(run.id)
+
+if run.status == "PROCESSED":
+    print(run.output.risk_level, run.output.summary)   # e.g. HIGH, "Content changed after signing..."
+    for signal in run.output.signals:
+        print(signal.type, signal.risk_assessment.level, signal.summary)
+```
+
+### Verify a document (sync) -- TypeScript
+
+```typescript
+const run = await client.verify({ file: { url: "https://example.com/statement.pdf" } });
+console.log(run.output?.riskLevel, run.output?.summary);
+for (const signal of run.output?.signals ?? []) {
+  console.log(signal.type, signal.riskAssessment, signal.summary, signal.evidence.length, "evidence items");
+}
+```
 
 ## Sync vs Async Processing
 
@@ -826,6 +869,8 @@ Docs: https://docs.extend.ai/evaluation/creating-evaluation-sets and https://doc
 | Getting started | https://docs.extend.ai/overview |
 | Extraction quick start | https://docs.extend.ai/extraction/overview |
 | Parsing quick start | https://docs.extend.ai/parsing/overview |
+| Verify (fraud detection) quick start | https://docs.extend.ai/verify/overview |
+| Verify signals and evidence codes | https://docs.extend.ai/verify/signals |
 | JSON Schema reference | https://docs.extend.ai/extraction/schema |
 | Extraction best practices | https://docs.extend.ai/extraction/best-practices/field-names-and-prompt-crafting |
 | Async processing | https://docs.extend.ai/general/async-processing |
