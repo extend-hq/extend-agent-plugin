@@ -55,6 +55,7 @@ curl -X POST "https://api.extend.ai/extract" \
 | `Authorization` | `Bearer sk_...` | Yes |
 | `x-extend-api-version` | `2026-02-09` (latest) | Yes |
 | `Content-Type` | `application/json` | For POST/PUT |
+| `x-extend-workspace-id` | `ws_...` | With organization-scoped keys (names the target workspace) |
 
 Get your API key from the [Developers page](https://dashboard.extend.ai/developers) in the Extend dashboard.
 
@@ -346,6 +347,16 @@ Subscribe an endpoint to events for a specific resource (e.g. a single workflow)
 | POST | `/webhook_subscriptions/{id}` | Update a webhook subscription |
 | DELETE | `/webhook_subscriptions/{id}` | Delete a webhook subscription |
 
+### Workspaces
+
+Create and retrieve the workspaces in your organization. **Please reach out to support@extend.ai if you would like to have it enabled for your organization**. Use an organization-scoped API key, and include `x-extend-workspace-id` in the header of the request.
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/workspaces` | Create a workspace (`{ "name": "Workspace A" }`) |
+| GET | `/workspaces` | List workspaces in the organization |
+| GET | `/workspaces/{id}` | Get a workspace |
+
 ---
 
 ## Common Patterns
@@ -485,6 +496,35 @@ result = client.parse_runs.create_and_poll(
 )
 for chunk in result.output.chunks:
     print(chunk.content)
+```
+
+### Embed OCR in PDF
+
+Set `config.advancedOptions.embedOcrInPdf: true` when creating a parse run. Wait for `PROCESSED`, then call `files.retrieve` with the completed run's `file.id` and download the processed PDF from `presignedUrl` (expires after 15 minutes). `outputUrl` downloads parsed JSON. Embedding skips entire pages that already contain text and does not require `returnOcr.words` or `returnOcr.lines`. See [Embed OCR in PDF](https://docs.extend.ai/parsing/embed-ocr-in-pdf) for verified SDK examples, including how to send the option before a typed SDK field is available.
+
+### Parse form fields and checkboxes -- Python
+
+Set `blockOptions.keyValue.structuredOutputEnabled` to get `details.form` on each `key_value` block: a tree where answers (`text_field`, `empty_field`, `signature_field`, `selection` with `selected`) are children of their `key`. See [Form Structured Output](https://docs.extend.ai/parsing/form-structured-output) for the full flattening helper.
+
+```python
+result = client.parse(
+    file={"url": "https://example.com/form.pdf"},
+    config={"blockOptions": {"keyValue": {"structuredOutputEnabled": True}}},
+)
+
+def walk(nodes, path=()):
+    for node in nodes:
+        if node.type == "key":
+            walk(node.children, (*path, node.content))
+        elif node.type in ("selection_group", "table"):
+            walk(node.children, path)
+        else:
+            print(" > ".join(path), "=", node.selected if node.type == "selection" else node.content)
+
+for chunk in result.output.chunks:
+    for block in chunk.blocks:
+        if block.type == "key_value" and block.details.form:
+            walk(block.details.form)
 ```
 
 ### Run a workflow -- Python
@@ -869,6 +909,8 @@ Docs: https://docs.extend.ai/evaluation/creating-evaluation-sets and https://doc
 | Getting started | https://docs.extend.ai/overview |
 | Extraction quick start | https://docs.extend.ai/extraction/overview |
 | Parsing quick start | https://docs.extend.ai/parsing/overview |
+| Embed OCR in PDF (API and Studio) | https://docs.extend.ai/parsing/embed-ocr-in-pdf |
+| Form structured output (key-value pairs, checkboxes) | https://docs.extend.ai/parsing/form-structured-output |
 | Verify (fraud detection) quick start | https://docs.extend.ai/verify/overview |
 | Verify signals and evidence codes | https://docs.extend.ai/verify/signals |
 | JSON Schema reference | https://docs.extend.ai/extraction/schema |
@@ -884,6 +926,7 @@ Docs: https://docs.extend.ai/evaluation/creating-evaluation-sets and https://doc
 | Evaluation sets (run + metrics) | https://docs.extend.ai/evaluation/running-evaluation-sets |
 | Workflow versioning (deploy, pin) | https://docs.extend.ai/workflows/workflow-versioning |
 | Publishing processor versions | https://docs.extend.ai/evaluation/publishing-processors |
+| Workspaces (create via API) | https://docs.extend.ai/api-reference/endpoints/workspace/create-workspace |
 | Test environment | https://docs.extend.ai/general/test-environment-guide |
 | API versioning | https://docs.extend.ai/api-reference/api-versioning |
 | 2026-02-09 migration | https://docs.extend.ai/api-reference/migrations/2026-02-09/overview |
