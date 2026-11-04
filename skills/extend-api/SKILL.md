@@ -527,6 +527,14 @@ for chunk in result.output.chunks:
             walk(block.details.form)
 ```
 
+### Refine generated edit schemas
+
+Set `config.advancedOptions.advancedSchemaRefinementEnabled: true` on Detect Form or Edit requests with Edit engine `1.0.0` or later. Omission uses the organization default; explicit `false` disables it. It adds latency, aligns field names and descriptions, and can apply explicit instructions for nesting or single-choice groups. Use `config.instructions` for Detect Form and `config.schemaGenerationInstructions` for Edit. Supplying `config.schema` to Edit skips refinement. See [Editing Configuration](https://docs.extend.ai/editing/configuration#advancedoptionsadvancedschemarefinementenabled).
+
+### Preserve signature validity when editing
+
+Set `config.advancedOptions.preserveSignatureValidity: true` on `editRuns.create` (`POST /edit_runs`) or `POST /edit` with Edit engine `1.0.0-beta` or later. It defaults to `false`. When enabled, `flattenPdf` defaults to `false`; do not enable flattening for signed or append-only PDFs. For these PDFs, fill existing compatible fields using `extend_edit:source_acroform.fieldName` or matching schema field names. Missing text, choice, checkbox, and table fields are not created; incompatible edits may be skipped, and the run fails with `INVALID_OPTIONS` if all requested fields are blocked. New signatures may still be added where permitted. See [Editing Configuration](https://docs.extend.ai/editing/configuration#advancedoptionspreservesignaturevalidity) for the API configuration and Studio control.
+
 ### Run a workflow -- Python
 
 ```python
@@ -911,6 +919,7 @@ Docs: https://docs.extend.ai/evaluation/creating-evaluation-sets and https://doc
 | Parsing quick start | https://docs.extend.ai/parsing/overview |
 | Embed OCR in PDF (API and Studio) | https://docs.extend.ai/parsing/embed-ocr-in-pdf |
 | Form structured output (key-value pairs, checkboxes) | https://docs.extend.ai/parsing/form-structured-output |
+| Preserve signature validity (Edit API and Studio) | https://docs.extend.ai/editing/configuration#advancedoptionspreservesignaturevalidity |
 | Verify (fraud detection) quick start | https://docs.extend.ai/verify/overview |
 | Verify signals and evidence codes | https://docs.extend.ai/verify/signals |
 | JSON Schema reference | https://docs.extend.ai/extraction/schema |
