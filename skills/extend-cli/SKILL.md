@@ -1,6 +1,6 @@
 ---
 name: extend-cli
-description: Use when extracting structured data from PDFs or images, parsing documents to text or markdown, classifying or identifying the type of a document (e.g. telling MSA from SOW from NDA), splitting multi-document bundles into segments, filling PDF forms via a values schema, detecting form fields to scaffold an edit schema, running multi-step document AI workflows, inspecting, watching, or listing Extend runs by ID (exr_, pr_, clr_, splr_, edr_, sgr_, workflow_run_), or uploading documents to an Extend workspace and managing the resulting file_xxx IDs - even if the user describes the task without naming Extend (e.g. "pull line items from these invoices", "OCR these receipts", "categorize this contract", "fill out this PDF form", or "split this combined PDF into individual statements").
+description: Run the Extend document AI CLI (extend) when the user explicitly asks to use Extend or references Extend resources or IDs (ex_, cl_, spl_, workflow_, edt_, evs_, ws_, file_, exr_, pr_, clr_, splr_, edr_, sgr_, vr_, workflow_run_). Covers extracting structured data from PDFs or images, parsing documents to text or markdown, classifying document types, splitting multi-document PDFs, filling PDF forms, detecting form fields, checking documents for tampering or forgery, running document AI workflows, inspecting or listing Extend runs, uploading workspace files, and managing organization workspaces. Do not invoke for generic local PDF requests that do not mention Extend.
 ---
 
 # Extend CLI
@@ -27,43 +27,45 @@ Per-call equivalents: `--region eu`, `--workspace ws_xxx`. For API-version pinni
 | Parse a document into structured text | `extend parse <input>` |
 | Classify a document into a configured category | `extend classify <input>` |
 | Split a multi-document PDF into segments | `extend split <input>` |
-| Fill a PDF form using a schema with values | `extend edit <input>` |
+| Fill a PDF form using a schema with values | `extend edit [<input>]` |
 | Detect form fields and scaffold an edit schema | `extend detect-form <input>` |
+| Check a document for tampering, forgery or AI generation | `extend verify <input>` |
 | Start a workflow run on a document | `extend workflows run <input>` |
 
-`<input>` is a local file path (auto-uploaded), a `file_xxx` ID, or an `https://` URL. For batches of up to 1,000 inputs, use `<verb> batch` or `workflows run batch`.
+`<input>` is a local file path (auto-uploaded), a `file_xxx` ID, or an `https://` URL. Several files: `<verb> batch` or `workflows run batch` give each its own run (up to 1,000); `--package` on `extract` or `workflows run` reads 2 to 50 together into one result.
+
+Options worth knowing: `parse --zero-retention` has Extend delete the document and its result once read; `parse --searchable-pdf <path>` saves a scanned PDF with a text layer; `edit --template edt_xxx` fills a form saved as a template (find it with `edit templates list`).
 
 Every action verb that needs a processor takes `--using <id>` - the ID prefix tells you the type: `ex_*` (extractors), `cl_*` (classifiers), `spl_*` (splitters), `workflow_*` (workflows). `parse` and `detect-form` run alone (no processor); `edit` takes `--instructions` (free-form prose).
 
 ## When this skill is active
 
-- **Documents come from disk, not from messages.** When the user references a document ("this contract", "these invoices", "the PDF") without giving a path, glance at the current working directory for matching files (`*.pdf`, `*.png`, `*.jpg`, `*.tif`) before asking. Real users say "this PDF" when there's exactly one in cwd.
+- **Documents come from disk, not from messages.** When the user references a document ("this contract", "these invoices", "the PDF") without giving a path, glance at the current working directory for matching files (`*.pdf`, `*.png`, `*.jpg`, `*.tif`) before asking.
 - **File uploads always go through `extend files upload`.** Never substitute a host-tool File API (e.g. an inline file upload tool that returns its own `file_xxx` ID). The skill's file IDs are only legitimate when produced by `extend files upload` or returned in another `extend` response.
-- **Run IDs (`exr_`/`pr_`/`clr_`/`splr_`/`edr_`/`workflow_run_`) are Extend's, not the host's.** When the user mentions one, reach for the typed runs commands (`extend <verb> runs get|watch|cancel`) - not a host-tool task tracker.
+- **Run IDs (`exr_`/`pr_`/`clr_`/`splr_`/`edr_`/`vr_`/`workflow_run_`) are Extend's, not the host's.** When the user mentions one, reach for the typed runs commands (`extend <verb> runs get|watch|cancel`) - not a host-tool task tracker.
 - **"OCR" alone is ambiguous; the user's intent disambiguates.** If they want specific values out (totals, line items, dates, names) → `extract` with a configured extractor. If they want raw text or markdown of the page → `parse`. "OCR this receipt and grab the total" is `extract`, not `parse`.
 
 ## Wait, async, watch
 
-Action verbs (`extract`/`classify`/`parse`/`split`/`edit`) **wait by default** for terminal state and print the result. Pass `--wait=false` to return the run ID immediately.
+Action verbs (`extract`/`classify`/`parse`/`split`/`edit`/`verify`) **wait by default** for terminal state and print the result. Pass `--wait=false` to return the run ID immediately.
 
 `extend workflows run` is **async by default** because workflow runs can take minutes to hours. Pass `--wait` to block on it.
 
-Run inspection is typed per verb; the ID prefix names the owner (`exr_` extract, `pr_` parse, `clr_` classify, `splr_` split, `edr_` edit, `sgr_` detect-form, `workflow_run_` workflows):
+Run inspection is typed per verb; the ID prefix names the owner (`exr_` extract, `pr_` parse, `clr_` classify, `splr_` split, `edr_` edit, `sgr_` detect-form, `vr_` verify, `workflow_run_` workflows):
 
     extend extract runs watch exr_xxx
 
-A wrong-type ID fails fast, naming the right command. Use `--exit-status` to gate downstream scripts on success:
+Use `--exit-status` to gate downstream scripts on success:
 
     extend extract runs watch exr_xxx --exit-status && downstream-script.sh
 
 To inspect state without polling: `extend <verb> runs get <id>`.
 
-**Run-type quirks** (the things that defy reasonable assumptions):
+**Run-type quirks:**
 
-- **Edit runs** (`edr_*`) are not listable; the API has no `LIST /edit_runs`.
-- **Parse and edit runs** have no cancel command; other run types support best-effort cancel.
-- **Form detection runs** (`sgr_*`) support only get and watch.
-- **Workflow batches** have **no GET endpoint** (hence no `workflows batches` commands); track them with `extend workflows runs list --batch <id>`.
+- **Edit runs** (`edr_*`) can't be cancelled, and **form detection runs** (`sgr_*`) support only get and watch. Other runs support best-effort cancel.
+- **Workflow batches** have **no GET endpoint**; track them with `extend workflows runs list --batch <id>`.
+- **Verify runs** (`vr_*`) finish PROCESSED whatever the risk, so `extend verify` exits 0 even at HIGH risk; read `output.riskLevel`, or pass `--fail-on high` to exit non-zero.
 
 For the per-command wait/profile/failure-status table: `extend help lifecycle`.
 
@@ -87,7 +89,8 @@ Use `--all` only when you genuinely want every result (scripts, not agents). Pow
    for date/currency/signature fields. Currency fields must be objects with
    amount and iso_4217_currency_code, not primitive numbers. If extraction
    misses a value, inspect parse output before over-tuning the schema.
-2. Create the extractor draft from the config body:
+2. Create the extractor draft from the config body (or skip step 1 and pass
+   1-5 sample documents with `--sample` to have Extend write the schema):
 
        extend extractors create --from-file extractor.json --name "Q3 invoices"
 
@@ -148,12 +151,12 @@ Use `--all` only when you genuinely want every result (scripts, not agents). Pow
 
 ### Configure a webhook for workflow completions
 
-1. Create the receiving endpoint and capture the signing secret
-   (returned only once - store it):
+1. Create the receiving endpoint with no global events (`workflow_run.*`
+   events live on subscriptions, not endpoints) and capture the signing
+   secret (returned only once - store it):
 
        extend webhooks endpoints create --url https://x.com/hook \
-           --name prod \
-           --events workflow_run.completed,workflow_run.failed -o json \
+           --name prod -o json \
            | jq -r '.signingSecret' > webhook.secret
 
 2. Bind the endpoint to a specific workflow:
@@ -186,7 +189,6 @@ field per the generated shape (`extend_edit:value` for explicit values;
 `edit --schema`:
 
     extend detect-form form.pdf --jq '.output.schema' -o json > schema.json
-    # populate values on each field per the generated shape, then:
     extend edit form.pdf --schema schema.json --output-file filled.pdf
 
 Combine both for fills that need conditional or formatting guidance the
@@ -196,9 +198,8 @@ schema cannot express:
         --instructions "format dates as MM/DD/YYYY; leave spouse blank if single"
 
 Without `--output-file`, the filled PDF stays on the server; fetch later
-with `extend files download <file-id>`. If you use the response's
-`output.editedFile.presignedUrl` directly, download it promptly; it expires
-after 15 minutes.
+with `extend files download <file-id>`. The response's
+`output.editedFile.presignedUrl` expires after 15 minutes.
 
 ### Fill a PDF form from values in another document
 
@@ -259,6 +260,7 @@ One line per command - invocation plus a summary. **Run `extend <command> --help
 - `extend parse runs get <run-id>` - Fetch a single parse run by ID.
 - `extend parse runs list` - List parse runs with filters.
 - `extend parse runs watch <run-id>` - Poll a parse run until it reaches a terminal state.
+- `extend parse runs cancel <run-id>` - Cancel a parse run by ID.
 - `extend parse runs delete <run-id>` - Delete a parse run record.
 - `extend parse batches get <batch-id>` - Show one parse batch run by ID.
 - `extend parse batches watch <batch-id>` - Poll a parse batch until it reaches a terminal state.
@@ -280,14 +282,22 @@ One line per command - invocation plus a summary. **Run `extend <command> --help
 - `extend split runs delete <run-id>` - Delete a split run record.
 - `extend split batches get <batch-id>` - Show one split batch run by ID.
 - `extend split batches watch <batch-id>` - Poll a split batch until it reaches a terminal state.
-- `extend edit <input>` - Fill a PDF form using a schema with values.
+- `extend edit [<input>]` - Fill a PDF form using a schema with values.
+- `extend edit templates list` - List saved edit templates.
 - `extend edit templates get <template-id>` - Fetch a saved edit template by ID.
 - `extend edit runs get <run-id>` - Fetch a single edit run by ID.
+- `extend edit runs list` - List edit runs with filters.
 - `extend edit runs watch <run-id>` - Poll an edit run until it reaches a terminal state.
 - `extend edit runs delete <run-id>` - Delete an edit run record.
 - `extend detect-form <input>` - Detect form fields and scaffold an edit schema.
 - `extend detect-form runs get <run-id>` - Fetch a single form detection run by ID.
 - `extend detect-form runs watch <run-id>` - Poll a form detection run until it reaches a terminal state.
+- `extend verify <input>` - Check a document for tampering, forgery or AI generation.
+- `extend verify runs get <run-id>` - Fetch a single verify run by ID.
+- `extend verify runs list` - List verify runs with filters.
+- `extend verify runs watch <run-id>` - Poll a verify run until it reaches a terminal state.
+- `extend verify runs cancel <run-id>` - Cancel a verify run by ID.
+- `extend verify runs delete <run-id>` - Delete a verify run record.
 
 ### Inspection
 
@@ -340,6 +350,12 @@ One line per command - invocation plus a summary. **Run `extend <command> --help
 - `extend evaluations items delete <evaluation-set-id> <item-id>` - Delete an evaluation item.
 - `extend evaluations runs create <evaluation-set-id>` - Start an evaluation set run.
 - `extend evaluations runs get <run-id>` - Show one evaluation run.
+
+### Workspaces
+
+- `extend workspaces list` - List workspaces in your organization.
+- `extend workspaces get <workspace-id>` - Show one workspace by ID.
+- `extend workspaces create` - Create a new workspace in your organization.
 
 ## When this skill isn't enough
 
