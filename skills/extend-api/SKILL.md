@@ -498,6 +498,12 @@ for chunk in result.output.chunks:
     print(chunk.content)
 ```
 
+### Reuse parsed output
+
+For direct or batch parse requests, set `config.useCache: true` on the initial and subsequent runs. Use `parse_runs.create_and_poll` / `parseRuns.createAndPoll` (or create and poll manually in Go), then read top-level `cacheHit`. A hit creates a new run and consumes zero parsing credits; a miss parses and bills normally. Reuse requires matching content and effective settings in the same organization, workspace, and environment. Entries are reusable for at most seven days, shortened by retention policy; zero data retention disables caching. This does not enable caching inside other processors or workflows.
+
+For SDKs without typed caching fields, see the verified extra-field examples at https://docs.extend.ai/parsing/caching.
+
 ### Embed OCR in PDF
 
 Set `config.advancedOptions.embedOcrInPdf: true` when creating a parse run. Wait for `PROCESSED`, then call `files.retrieve` with the completed run's `file.id` and download the processed PDF from `presignedUrl` (expires after 15 minutes). `outputUrl` downloads parsed JSON. Embedding skips entire pages that already contain text and does not require `returnOcr.words` or `returnOcr.lines`. See [Embed OCR in PDF](https://docs.extend.ai/parsing/embed-ocr-in-pdf) for verified SDK examples, including how to send the option before a typed SDK field is available.
@@ -917,6 +923,7 @@ Docs: https://docs.extend.ai/evaluation/creating-evaluation-sets and https://doc
 | Getting started | https://docs.extend.ai/overview |
 | Extraction quick start | https://docs.extend.ai/extraction/overview |
 | Parsing quick start | https://docs.extend.ai/parsing/overview |
+| Parsed output caching (`useCache`, `cacheHit`) | https://docs.extend.ai/parsing/caching |
 | Embed OCR in PDF (API and Studio) | https://docs.extend.ai/parsing/embed-ocr-in-pdf |
 | Form structured output (key-value pairs, checkboxes) | https://docs.extend.ai/parsing/form-structured-output |
 | Preserve signature validity (Edit API and Studio) | https://docs.extend.ai/editing/configuration#advancedoptionspreservesignaturevalidity |
